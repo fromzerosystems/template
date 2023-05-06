@@ -1,0 +1,37 @@
+# ! ------------------------------
+# This doesn't work. It's kept to show how to disable a workflow for one-shot running
+
+name: Initialize Repository
+on: create
+jobs:
+  init-repo:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          repository: '${{ github.repository_owner }}/workflows'
+    
+      - name: Initialize Repository
+        run: echo "Hello World!" $GITHUB_REPOSITORY $GITHUB_REPOSITORY_OWNER "${{ github.workflow }}"
+        
+      - name: Register Repository With Weekly Mirror Workflow Repository
+        run: |
+          gh workflow run -R "$GITHUB_REPOSITORY_OWNER/workflows" register-for-mirror.yaml -f repo=$GITHUB_REPOSITORY
+          
+          # git clone https://github.com/${GITHUB_REPOSITORY_OWNER}/workflows
+          # cd workflows
+          # git checkout -b $GITHUB_REPOSITORY
+          # echo $GITHUB_REPOSITORY >> repos_to_mirror.txt
+          # git add .
+          # git commit -m '[${{ github.workflow }}] Register repository to be mirrored ($GITHUB_REPOSITORY)'
+          # git push origin $GITHUB_REPOSITORY
+          # gh pr create -R ${GITHUB_REPOSITORY_OWNER}/workflows --fill
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+          
+      - name: Disable This Workflow
+        shell: bash
+        run: |
+          gh workflow disable -R $GITHUB_REPOSITORY "${{ github.workflow }}"
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
